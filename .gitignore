@@ -4,7 +4,6 @@ __pycache__/
 venv/
 .venv/
 *.pkl
-*.joblib
 data/*.csv
 .pytest_cache/
 htmlcov/
