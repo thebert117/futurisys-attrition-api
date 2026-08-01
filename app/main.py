@@ -44,18 +44,24 @@ def predict(employee: EmployeeInput):
     probabilite = model.predict_proba(input_df)[0, 1]
     risque = probabilite >= 0.5
 
-    # Enregistrement systématique de l'input et de l'output en base de données
-    session = SessionLocal()
+    # Enregistrement systématique de l'input et de l'output en base de données.
+    # Ce logging ne doit jamais empêcher l'API de répondre : si la base est
+    # injoignable (ex. déploiement public alors que la BDD reste en local,
+    # conformément à l'énoncé), on avertit dans les logs sans faire planter la requête.
     try:
-        log_entry = PredictionLog(
-            **employee.model_dump(),
-            risque_depart=bool(risque),
-            probabilite_depart=round(float(probabilite), 4),
-        )
-        session.add(log_entry)
-        session.commit()
-    finally:
-        session.close()
+        session = SessionLocal()
+        try:
+            log_entry = PredictionLog(
+                **employee.model_dump(),
+                risque_depart=bool(risque),
+                probabilite_depart=round(float(probabilite), 4),
+            )
+            session.add(log_entry)
+            session.commit()
+        finally:
+            session.close()
+    except Exception as e:
+        print(f"[avertissement] Échec de l'enregistrement en base de données : {e}")
 
     return PredictionOutput(
         risque_depart=bool(risque),
