@@ -5,6 +5,8 @@ import pandas as pd
 from fastapi import FastAPI, HTTPException
 
 from app.schemas import EmployeeInput, PredictionOutput
+from db.database import SessionLocal
+from db.models import PredictionLog
 from ml.train_model import add_engineered_features
 
 app = FastAPI(title="Futurisys Attrition API")
@@ -41,6 +43,19 @@ def predict(employee: EmployeeInput):
 
     probabilite = model.predict_proba(input_df)[0, 1]
     risque = probabilite >= 0.5
+
+    # Enregistrement systématique de l'input et de l'output en base de données
+    session = SessionLocal()
+    try:
+        log_entry = PredictionLog(
+            **employee.model_dump(),
+            risque_depart=bool(risque),
+            probabilite_depart=round(float(probabilite), 4),
+        )
+        session.add(log_entry)
+        session.commit()
+    finally:
+        session.close()
 
     return PredictionOutput(
         risque_depart=bool(risque),
