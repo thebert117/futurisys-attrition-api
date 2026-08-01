@@ -10,6 +10,28 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: futurisys_attrition
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_NAME: futurisys_attrition
+
     steps:
       - name: Récupérer le code
         uses: actions/checkout@v4
@@ -21,6 +43,9 @@ jobs:
 
       - name: Installer les dépendances
         run: pip install -r requirements.txt
+
+      - name: Créer les tables de la base de données
+        run: python -m db.create_db
 
       - name: Lancer les tests avec couverture
         run: pytest --cov=app --cov-report=term-missing
