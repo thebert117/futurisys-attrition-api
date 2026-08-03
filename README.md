@@ -25,9 +25,11 @@ Le modèle est un `GradientBoostingClassifier` réentraîné à partir du projet
 - [CI/CD](#cicd)
 - [Base de données](#base-de-données)
 - [Déploiement](#déploiement)
+- [Tests](#tests)
 - [Standards de code](#standards-de-code)
 - [Documentation du modèle](./docs/MODEL.md)
 - [License](#license)
+- [Contact](#contact)
 
 ## Installation
 
@@ -62,7 +64,6 @@ Le modèle n'est pas fourni tel quel avec le dépôt, il faut le réentraîner l
 
 **Important** : toujours utiliser `python train.py`, jamais `python ml/train_model.py` ni `python -m ml.train_model` directement. Le pipeline encapsule le feature engineering via un `FunctionTransformer` ; si `train_model.py` est exécuté comme point d'entrée direct, la fonction est sérialisée sous le module `__main__`, ce qui casse le rechargement du modèle ailleurs (API, tests, Render).
 
-
 Cela génère `ml/artifacts/attrition_model.joblib`, utilisé par l'API.
 
 ## Utilisation
@@ -88,7 +89,7 @@ Le endpoint `/predict` valide strictement les données d'entrée via Pydantic (t
 
 ### Exemple d'appel à /predict
 
-\`\`\`bash
+```bash
 curl -X POST "http://127.0.0.1:8000/predict" \
   -H "Content-Type: application/json" \
   -H "X-API-Key: votre_cle_api" \
@@ -107,15 +108,15 @@ curl -X POST "http://127.0.0.1:8000/predict" \
     "domaine_etude": "Infra & Cloud", "frequence_deplacement": "Occasionnel",
     "annees_depuis_la_derniere_promotion": 0, "annees_sous_responsable_actuel": 5
   }'
-\`\`\`
+```
 
 Réponse :
-\`\`\`json
+```json
 {
   "risque_depart": true,
   "probabilite_depart": 0.737
 }
-\`\`\`
+```
 
 Documentation technique complète du modèle (performances, limites, maintenance) : [`docs/MODEL.md`](./docs/MODEL.md)
 
@@ -141,12 +142,7 @@ python -c "import secrets; print(secrets.token_urlsafe(32))"
 
 ### Exemple d'appel authentifié
 
-```bash
-curl -X POST "http://127.0.0.1:8000/predict" \
-  -H "Content-Type: application/json" \
-  -H "X-API-Key: votre_cle_api" \
-  -d '{ ... }'
-```
+Voir l'exemple complet dans la section [Utilisation](#utilisation) — l'en-tête `X-API-Key` y est déjà inclus.
 
 Sans clé (401) ou avec une clé incorrecte (403), l'API refuse la requête.
 
@@ -193,6 +189,16 @@ Le schéma est volontairement dénormalisé plutôt que d'extraire les variables
 - Les valeurs catégorielles sont déjà validées en amont par Pydantic (`Literal`), rendant une contrainte de clé étrangère redondante
 - `prediction_logs` est un journal d'événements (audit log), un pattern où la dénormalisation est une pratique standard, même dans des systèmes matures
 
+### Besoins analytiques
+
+La table `prediction_logs` (horodatage inclus) permet d'alimenter une analyse a posteriori de l'usage du modèle :
+
+- Suivi du volume de prédictions dans le temps
+- Distribution des scores de risque prédits (`probabilite_depart`), utile pour détecter une dérive du modèle
+- Croisement avec `employees` pour comparer les prédictions aux départs réels observés (une fois ces données disponibles)
+
+Un tableau de bord (ex. Metabase, Superset, ou simple notebook Python connecté à PostgreSQL) pourrait exploiter directement ces deux tables sans transformation supplémentaire, la structure actuelle étant déjà adaptée à une exploration analytique simple (SQL direct, pas de dénormalisation supplémentaire nécessaire pour ce volume).
+
 ### Mise en place
 
 ```bash
@@ -222,13 +228,14 @@ La suite de tests est organisée par nature :
 
 - `tests/test_health.py`, `tests/test_predict_api.py` — tests fonctionnels (via l'API réelle, TestClient)
 - `tests/test_schemas.py`, `tests/test_feature_engineering.py` — tests unitaires (composants isolés)
+- `tests/test_database.py` — tests de la base de données (structure, intégrité, idempotence)
 - `tests/test_model_performance.py` — tests de performance et de reproductibilité du modèle
 
 Lancer la suite complète avec couverture :
 
-\`\`\`bash
+```bash
 pytest --cov=app --cov=ml --cov=db --cov-report=term-missing
-\`\`\`
+```
 
 Le rapport de couverture HTML est généré automatiquement dans `htmlcov/` et publié comme artefact téléchargeable à chaque exécution du pipeline CI (onglet Actions de GitHub, section "Artifacts" du run).
 
