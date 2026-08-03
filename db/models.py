@@ -5,7 +5,7 @@ Modèles SQLAlchemy décrivant les tables de la base de données Futurisys.
 - PredictionLog : un enregistrement par appel à /predict (input + output)
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import Boolean, Column, DateTime, Float, Integer, String
 from sqlalchemy.orm import declarative_base
@@ -56,7 +56,7 @@ class PredictionLog(Base):
     __tablename__ = "prediction_logs"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Mêmes colonnes d'entrée que le schéma Pydantic EmployeeInput
     age = Column(Integer, nullable=False)

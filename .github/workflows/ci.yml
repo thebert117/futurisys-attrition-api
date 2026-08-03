@@ -48,4 +48,10 @@ jobs:
         run: python -m db.create_db
 
       - name: Lancer les tests avec couverture
-        run: pytest --cov=app --cov-report=term-missing
+        run: pytest --cov=app --cov=ml --cov=db --cov-report=term-missing --cov-report=html
+
+      - name: Publier le rapport de couverture
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: htmlcov/

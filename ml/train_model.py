@@ -20,7 +20,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split, StratifiedKFold
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.preprocessing import OneHotEncoder, StandardScaler, FunctionTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.utils.class_weight import compute_sample_weight
@@ -96,6 +96,23 @@ def build_preprocessor(numeric_cols, categorical_cols) -> ColumnTransformer:
     )
 
 
+def build_full_pipeline(numeric_cols, categorical_cols) -> Pipeline:
+    """Construit le pipeline complet et autonome : feature engineering inclus.
+
+    Contrairement à une version où add_engineered_features serait appelée
+    séparément avant le pipeline, ici tout est encapsulé dans un seul objet :
+    on peut lui donner des données brutes (mêmes colonnes que le CSV d'origine)
+    et il se charge de tout, jusqu'à la prédiction finale. Cela évite le risque
+    d'oublier d'appeler le feature engineering côté API ou ailleurs.
+    """
+    preprocessor = build_preprocessor(numeric_cols, categorical_cols)
+    return Pipeline(steps=[
+        ("feature_engineering", FunctionTransformer(add_engineered_features)),
+        ("preprocessor", preprocessor),
+        ("classifier", GradientBoostingClassifier(random_state=RANDOM_STATE, **BEST_PARAMS)),
+    ])
+
+
 def main():
     project_root = Path(__file__).resolve().parent.parent
     data_path = project_root / "data" / "technova_hr_clean.csv"
@@ -104,16 +121,20 @@ def main():
 
     print(f"Chargement du dataset depuis {data_path}...")
     df = pd.read_csv(data_path)
-    df_model = add_engineered_features(df)
 
-    X = df_model.drop(columns=COLS_TO_EXCLUDE)
-    y = df_model["target_attrition"]
+    # X reste en données BRUTES (mêmes colonnes que le CSV) : le feature engineering
+    # est maintenant réalisé à l'intérieur du pipeline lui-même, pas ici.
+    X = df.drop(columns=COLS_TO_EXCLUDE)
+    y = df["target_attrition"]
 
-    numeric_cols = X.select_dtypes(include=["int64", "float64"]).columns.tolist()
-    categorical_cols = X.select_dtypes(include=["object", "str"]).columns.tolist()
+    # On a besoin de connaître les colonnes numériques/catégorielles APRÈS feature
+    # engineering pour construire le ColumnTransformer, donc on calcule un aperçu.
+    X_preview = add_engineered_features(X)
+    numeric_cols = X_preview.select_dtypes(include=["int64", "float64"]).columns.tolist()
+    categorical_cols = X_preview.select_dtypes(include=["object", "str"]).columns.tolist()
 
-    print(f"X : {X.shape[0]} lignes x {X.shape[1]} colonnes")
-    print(f"Colonnes numériques ({len(numeric_cols)}), catégorielles ({len(categorical_cols)})")
+    print(f"X (brut) : {X.shape[0]} lignes x {X.shape[1]} colonnes")
+    print(f"Après feature engineering : {len(numeric_cols)} numériques, {len(categorical_cols)} catégorielles")
 
     # --- Étape 1 : revalidation sur le split 80/20, comme dans le notebook ---
     print("\n=== Étape 1 : revalidation sur split train/test (80/20) ===")
@@ -121,11 +142,7 @@ def main():
         X, y, test_size=0.2, stratify=y, random_state=RANDOM_STATE,
     )
 
-    preprocessor = build_preprocessor(numeric_cols, categorical_cols)
-    pipe = Pipeline(steps=[
-        ("preprocessor", preprocessor),
-        ("classifier", GradientBoostingClassifier(random_state=RANDOM_STATE, **BEST_PARAMS)),
-    ])
+    pipe = build_full_pipeline(numeric_cols, categorical_cols)
 
     sample_weights_train = compute_sample_weight(class_weight="balanced", y=y_train)
     pipe.fit(X_train, y_train, classifier__sample_weight=sample_weights_train)
@@ -142,11 +159,7 @@ def main():
 
     # --- Étape 2 : modèle final entraîné sur 100% des données ---
     print("\n=== Étape 2 : entraînement du modèle final sur 100% des données ===")
-    preprocessor_final = build_preprocessor(numeric_cols, categorical_cols)
-    final_pipe = Pipeline(steps=[
-        ("preprocessor", preprocessor_final),
-        ("classifier", GradientBoostingClassifier(random_state=RANDOM_STATE, **BEST_PARAMS)),
-    ])
+    final_pipe = build_full_pipeline(numeric_cols, categorical_cols)
 
     sample_weights_full = compute_sample_weight(class_weight="balanced", y=y)
     final_pipe.fit(X, y, classifier__sample_weight=sample_weights_full)

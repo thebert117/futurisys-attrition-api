@@ -7,7 +7,6 @@ from fastapi import FastAPI, HTTPException
 from app.schemas import EmployeeInput, PredictionOutput
 from db.database import SessionLocal
 from db.models import PredictionLog
-from ml.train_model import add_engineered_features
 
 app = FastAPI(title="Futurisys Attrition API")
 
@@ -31,15 +30,12 @@ def predict(employee: EmployeeInput):
     if model is None:
         raise HTTPException(
             status_code=503,
-            detail="Modèle non disponible. Avez-vous lancé ml/train_model.py ?",
+            detail="Modèle non disponible. Avez-vous lancé train.py ?",
         )
 
-    # On convertit les données validées par Pydantic en DataFrame à une ligne,
-    # exactement comme le format attendu par le pipeline scikit-learn
+    # Le modèle chargé encapsule tout : feature engineering, preprocessing et
+    # classification. On lui passe directement les données brutes validées par Pydantic.
     input_df = pd.DataFrame([employee.model_dump()])
-
-    # On applique le même feature engineering que lors de l'entraînement
-    input_df = add_engineered_features(input_df)
 
     probabilite = model.predict_proba(input_df)[0, 1]
     risque = probabilite >= 0.5

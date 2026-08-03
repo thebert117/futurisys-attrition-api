@@ -42,7 +42,10 @@ Le fichier `.env` n'est jamais versionné (voir `.gitignore`) - il contient des 
 Le modèle n'est pas fourni tel quel avec le dépôt, il faut le réentraîner localement :
 
 1. Placer le fichier `technova_hr_clean.csv` dans `data/`
-2. Lancer : `python ml/train_model.py`
+2. Lancer : `python train.py`
+
+**Important** : toujours utiliser `python train.py`, jamais `python ml/train_model.py` ni `python -m ml.train_model` directement. Le pipeline encapsule le feature engineering via un `FunctionTransformer` ; si `train_model.py` est exécuté comme point d'entrée direct, la fonction est sérialisée sous le module `__main__`, ce qui casse le rechargement du modèle ailleurs (API, tests, Render).
+
 
 Cela génère `ml/artifacts/attrition_model.joblib`, utilisé par l'API.
 
@@ -126,6 +129,22 @@ Le déploiement est automatique à chaque push sur `main` (Render détecte le ch
 URL de production : https://futurisys-attrition-api.onrender.com
 
 **Limite connue** : le plan gratuit Render met le service en veille après 15 minutes d'inactivité (redémarrage à froid de 30-60 secondes au premier appel suivant).
+
+## Tests
+
+La suite de tests est organisée par nature :
+
+- `tests/test_health.py`, `tests/test_predict_api.py` — tests fonctionnels (via l'API réelle, TestClient)
+- `tests/test_schemas.py`, `tests/test_feature_engineering.py` — tests unitaires (composants isolés)
+- `tests/test_model_performance.py` — tests de performance et de reproductibilité du modèle
+
+Lancer la suite complète avec couverture :
+
+\`\`\`bash
+pytest --cov=app --cov=ml --cov=db --cov-report=term-missing
+\`\`\`
+
+Le rapport de couverture HTML est généré automatiquement dans `htmlcov/` et publié comme artefact téléchargeable à chaque exécution du pipeline CI (onglet Actions de GitHub, section "Artifacts" du run).
 
 ## Standards de code
 
