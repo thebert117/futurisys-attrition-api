@@ -21,6 +21,7 @@ Le modèle est un `GradientBoostingClassifier` réentraîné à partir du projet
 - [Built With](#built-with)
 - [Installation](#installation)
 - [Utilisation](#utilisation)
+- [Authentification](#authentification)
 - [CI/CD](#cicd)
 - [Base de données](#base-de-données)
 - [Déploiement](#déploiement)
@@ -90,6 +91,7 @@ Le endpoint `/predict` valide strictement les données d'entrée via Pydantic (t
 \`\`\`bash
 curl -X POST "http://127.0.0.1:8000/predict" \
   -H "Content-Type: application/json" \
+  -H "X-API-Key: votre_cle_api" \
   -d '{
     "age": 41, "genre": "F", "revenu_mensuel": 5993,
     "statut_marital": "Célibataire", "departement": "Commercial",
@@ -116,6 +118,41 @@ Réponse :
 \`\`\`
 
 Documentation technique complète du modèle (performances, limites, maintenance) : [`docs/MODEL.md`](./docs/MODEL.md)
+
+## Authentification
+
+L'endpoint `/predict` est protégé par une clé API, transmise via l'en-tête HTTP `X-API-Key`. L'endpoint `/health` reste public (convention standard pour un endpoint de monitoring).
+
+Choix volontairement simple pour ce POC : une clé secrète unique et partagée, plutôt qu'un système de comptes utilisateurs — adapté à un usage où l'API est consommée par un service interne (SIRH, tableau de bord RH), sans besoin de droits différenciés entre utilisateurs.
+
+### Configuration
+
+La clé est définie dans `.env` (jamais versionnée) :
+
+```
+API_KEY=une_chaine_aleatoire_longue
+```
+
+Génération d'une clé sécurisée :
+
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+### Exemple d'appel authentifié
+
+```bash
+curl -X POST "http://127.0.0.1:8000/predict" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: votre_cle_api" \
+  -d '{ ... }'
+```
+
+Sans clé (401) ou avec une clé incorrecte (403), l'API refuse la requête.
+
+### Gestion des accès en production
+
+Sur Render, la clé est définie comme variable d'environnement (Dashboard → Settings → Environment), jamais en clair dans le code ou le Dockerfile. Une rotation de la clé (en cas de compromission) consiste à en générer une nouvelle et à mettre à jour la variable d'environnement sur Render, sans redéploiement de code nécessaire.
 
 ## CI/CD
 

@@ -2,9 +2,10 @@ from pathlib import Path
 
 import joblib
 import pandas as pd
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
 
 from app.schemas import EmployeeInput, PredictionOutput
+from app.security import verify_api_key
 from db.database import SessionLocal
 from db.models import PredictionLog
 
@@ -25,7 +26,7 @@ def health():
     return {"status": "ok"}
 
 
-@app.post("/predict", response_model=PredictionOutput)
+@app.post("/predict", response_model=PredictionOutput, dependencies=[Depends(verify_api_key)])
 def predict(employee: EmployeeInput):
     if model is None:
         raise HTTPException(
