@@ -177,7 +177,9 @@ Base PostgreSQL utilisée **uniquement en local**, conformément au cadrage du p
 
 ### Schéma
 
-**`employees`** - dataset RH brut importé depuis le CSV d'origine (1470 salariés), sert de référence historique.
+Schéma détaillé (diagramme UML) : [`docs/schema-bdd.md`](./docs/schema-bdd.md)
+
+**`employees`** - dataset RH importé depuis le CSV d'origine (1470 salariés), sert de référence.
 
 **`prediction_logs`** - un enregistrement par appel à `/predict` : les 27 champs d'entrée envoyés à l'API, la prédiction retournée (`risque_depart`, `probabilite_depart`), et un horodatage automatique (`created_at`).
 
