@@ -12,6 +12,8 @@ from app.main import app
 
 client = TestClient(app)
 
+API_KEY_HEADERS = {"X-API-Key": "test-secret-key-12345"}
+
 VALID_EMPLOYEE = {
     "age": 41,
     "genre": "F",
@@ -43,13 +45,31 @@ VALID_EMPLOYEE = {
 }
 
 
-def test_predict_returns_200_with_valid_data():
+def test_predict_without_api_key_returns_401():
+    """Aucune clé fournie : accès refusé (401)."""
     response = client.post("/predict", json=VALID_EMPLOYEE)
+    assert response.status_code == 401
+
+
+def test_predict_with_wrong_api_key_returns_403():
+    """Clé fournie mais incorrecte : accès refusé (403)."""
+    response = client.post("/predict", json=VALID_EMPLOYEE, headers={"X-API-Key": "mauvaise-cle"})
+    assert response.status_code == 403
+
+
+def test_health_does_not_require_api_key():
+    """/health reste public, sans authentification (convention standard pour un endpoint de monitoring)."""
+    response = client.get("/health")
+    assert response.status_code == 200
+
+
+def test_predict_returns_200_with_valid_data():
+    response = client.post("/predict", json=VALID_EMPLOYEE, headers=API_KEY_HEADERS)
     assert response.status_code == 200
 
 
 def test_predict_returns_expected_fields():
-    response = client.post("/predict", json=VALID_EMPLOYEE)
+    response = client.post("/predict", json=VALID_EMPLOYEE, headers=API_KEY_HEADERS)
     body = response.json()
     assert "risque_depart" in body
     assert "probabilite_depart" in body
@@ -60,21 +80,21 @@ def test_predict_returns_expected_fields():
 def test_predict_rejects_invalid_genre():
     invalid_data = dict(VALID_EMPLOYEE)
     invalid_data["genre"] = "X"
-    response = client.post("/predict", json=invalid_data)
+    response = client.post("/predict", json=invalid_data, headers=API_KEY_HEADERS)
     assert response.status_code == 422
 
 
 def test_predict_rejects_missing_field():
     incomplete_data = dict(VALID_EMPLOYEE)
     del incomplete_data["age"]
-    response = client.post("/predict", json=incomplete_data)
+    response = client.post("/predict", json=incomplete_data, headers=API_KEY_HEADERS)
     assert response.status_code == 422
 
 
 def test_predict_rejects_negative_age():
     invalid_data = dict(VALID_EMPLOYEE)
     invalid_data["age"] = -5
-    response = client.post("/predict", json=invalid_data)
+    response = client.post("/predict", json=invalid_data, headers=API_KEY_HEADERS)
     assert response.status_code == 422
 
 
@@ -82,7 +102,7 @@ def test_predict_accepts_boundary_age_18():
     """Cas limite : l'âge minimum autorisé (18) doit être accepté."""
     data = dict(VALID_EMPLOYEE)
     data["age"] = 18
-    response = client.post("/predict", json=data)
+    response = client.post("/predict", json=data, headers=API_KEY_HEADERS)
     assert response.status_code == 200
 
 
@@ -90,7 +110,7 @@ def test_predict_accepts_boundary_age_70():
     """Cas limite : l'âge maximum autorisé (70) doit être accepté."""
     data = dict(VALID_EMPLOYEE)
     data["age"] = 70
-    response = client.post("/predict", json=data)
+    response = client.post("/predict", json=data, headers=API_KEY_HEADERS)
     assert response.status_code == 200
 
 
@@ -98,15 +118,15 @@ def test_predict_rejects_age_just_above_boundary():
     """Cas limite : 71 ans (juste au-dessus de la borne) doit être rejeté."""
     data = dict(VALID_EMPLOYEE)
     data["age"] = 71
-    response = client.post("/predict", json=data)
+    response = client.post("/predict", json=data, headers=API_KEY_HEADERS)
     assert response.status_code == 422
 
 
 def test_predict_is_deterministic():
     """La même requête envoyée deux fois doit produire exactement la même prédiction
     (le modèle ne doit pas avoir de composante aléatoire non maîtrisée)."""
-    response_1 = client.post("/predict", json=VALID_EMPLOYEE)
-    response_2 = client.post("/predict", json=VALID_EMPLOYEE)
+    response_1 = client.post("/predict", json=VALID_EMPLOYEE, headers=API_KEY_HEADERS)
+    response_2 = client.post("/predict", json=VALID_EMPLOYEE, headers=API_KEY_HEADERS)
     assert response_1.json() == response_2.json()
 
 
@@ -137,7 +157,7 @@ def test_predict_high_risk_profile_has_higher_probability_than_low_risk_profile(
         "revenu_mensuel": 12000,
     })
 
-    proba_high = client.post("/predict", json=high_risk).json()["probabilite_depart"]
-    proba_low = client.post("/predict", json=low_risk).json()["probabilite_depart"]
+    proba_high = client.post("/predict", json=high_risk, headers=API_KEY_HEADERS).json()["probabilite_depart"]
+    proba_low = client.post("/predict", json=low_risk, headers=API_KEY_HEADERS).json()["probabilite_depart"]
 
     assert proba_high > proba_low
