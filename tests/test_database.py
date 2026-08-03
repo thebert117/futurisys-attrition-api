@@ -7,6 +7,7 @@ Contrairement aux autres tests, ceux-ci vérifient directement la BDD
 """
 
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 import pytest
 from sqlalchemy import inspect
@@ -16,6 +17,8 @@ from db import insert_dataset
 from db.create_db import create_tables
 from db.database import SessionLocal, engine
 from db.models import Employee, PredictionLog
+
+DATA_PATH = Path(__file__).resolve().parent.parent / "data" / "technova_hr_clean.csv"
 
 
 def test_create_tables_is_idempotent():
@@ -52,6 +55,9 @@ def test_employees_id_employee_is_primary_key():
 
 def test_insert_dataset_populates_employees_table():
     """Le script d'insertion doit remplir la table avec le dataset complet (1470 lignes)."""
+    if not DATA_PATH.exists():
+        pytest.skip("technova_hr_clean.csv absent (fichier non versionné, volontairement exclu de Git)")
+
     insert_dataset.main()
 
     session = SessionLocal()
@@ -66,6 +72,9 @@ def test_insert_dataset_populates_employees_table():
 def test_insert_dataset_is_idempotent():
     """Relancer le script une deuxième fois ne doit PAS dupliquer les données
     (protection contre les doublons déjà présente dans insert_dataset.py)."""
+    if not DATA_PATH.exists():
+        pytest.skip("technova_hr_clean.csv absent (fichier non versionné, volontairement exclu de Git)")
+
     insert_dataset.main()  # premier appel (peut être un no-op si déjà peuplé)
     insert_dataset.main()  # deuxième appel : ne doit rien ajouter de plus
 
