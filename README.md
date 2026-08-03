@@ -4,14 +4,29 @@ POC de mise en production d'un modèle de machine learning (prédiction du risqu
 
 Le modèle est un `GradientBoostingClassifier` réentraîné à partir du projet Technova Partners, exposé via une API REST validée par Pydantic, avec traçabilité complète des prédictions dans une base PostgreSQL.
 
+### Built With
+
+- [Python 3.11](https://www.python.org/)
+- [FastAPI](https://fastapi.tiangolo.com/) — framework API
+- [Pydantic](https://docs.pydantic.dev/) — validation des données
+- [scikit-learn](https://scikit-learn.org/) — modèle de machine learning
+- [PostgreSQL](https://www.postgresql.org/) + [SQLAlchemy](https://www.sqlalchemy.org/) — base de données
+- [Pytest](https://docs.pytest.org/) + [pytest-cov](https://coverage.readthedocs.io/) — tests
+- [Docker](https://www.docker.com/) — conteneurisation
+- [GitHub Actions](https://docs.github.com/actions) — CI/CD
+- [Render](https://render.com/) — hébergement
+
 ## Sommaire
 
+- [Built With](#built-with)
 - [Installation](#installation)
 - [Utilisation](#utilisation)
 - [CI/CD](#cicd)
 - [Base de données](#base-de-données)
 - [Déploiement](#déploiement)
 - [Standards de code](#standards-de-code)
+- [Documentation du modèle](./docs/MODEL.md)
+- [License](#license)
 
 ## Installation
 
@@ -69,6 +84,38 @@ Documentation interactive (Swagger) : http://127.0.0.1:8000/docs
 Le endpoint `/predict` valide strictement les données d'entrée via Pydantic (types, bornes, valeurs catégorielles autorisées) et retourne une erreur `422` en cas de donnée invalide.
 
 **Limite connue** : la variable `augmentation_salaire_precedente` est traitée comme catégorielle (valeurs `"11 %"` à `"25 %"`) plutôt que numérique, héritage du modèle d'origine. Une valeur hors de cette plage est rejetée par l'API plutôt que silencieusement ignorée par le modèle - un choix délibéré, détaillé dans `CONTRIBUTING.md`.
+
+### Exemple d'appel à /predict
+
+\`\`\`bash
+curl -X POST "http://127.0.0.1:8000/predict" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "age": 41, "genre": "F", "revenu_mensuel": 5993,
+    "statut_marital": "Célibataire", "departement": "Commercial",
+    "poste": "Cadre Commercial", "nombre_experiences_precedentes": 8,
+    "annee_experience_totale": 8, "annees_dans_l_entreprise": 6,
+    "annees_dans_le_poste_actuel": 4, "satisfaction_employee_environnement": 2,
+    "note_evaluation_precedente": 3, "niveau_hierarchique_poste": 2,
+    "satisfaction_employee_nature_travail": 4, "satisfaction_employee_equipe": 1,
+    "satisfaction_employee_equilibre_pro_perso": 1, "note_evaluation_actuelle": 3,
+    "heure_supplementaires": "Oui", "augmentation_salaire_precedente": "11 %",
+    "nombre_participation_pee": 0, "nb_formations_suivies": 0,
+    "distance_domicile_travail": 1, "niveau_education": 2,
+    "domaine_etude": "Infra & Cloud", "frequence_deplacement": "Occasionnel",
+    "annees_depuis_la_derniere_promotion": 0, "annees_sous_responsable_actuel": 5
+  }'
+\`\`\`
+
+Réponse :
+\`\`\`json
+{
+  "risque_depart": true,
+  "probabilite_depart": 0.737
+}
+\`\`\`
+
+Documentation technique complète du modèle (performances, limites, maintenance) : [`docs/MODEL.md`](./docs/MODEL.md)
 
 ## CI/CD
 
@@ -149,3 +196,13 @@ Le rapport de couverture HTML est généré automatiquement dans `htmlcov/` et p
 ## Standards de code
 
 Voir [`CONTRIBUTING.md`](./CONTRIBUTING.md) pour les conventions de commit, de nommage de branches, et les standards d'expérimentation ML.
+
+## License
+
+Distribué sous licence MIT. Voir [`LICENSE`](./LICENSE) pour plus de détails.
+
+## Contact
+
+Thomas Hébert — [github.com/thebert117](https://github.com/thebert117)
+
+Lien du projet : [github.com/thebert117/futurisys-attrition-api](https://github.com/thebert117/futurisys-attrition-api)
