@@ -31,7 +31,6 @@ jobs:
       DB_HOST: localhost
       DB_PORT: 5432
       DB_NAME: futurisys_attrition
-      API_KEY: test-secret-key-12345
 
     steps:
       - name: Récupérer le code
