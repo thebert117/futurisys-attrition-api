@@ -17,22 +17,21 @@ def main():
     df = pd.read_csv(csv_path)
 
     session = SessionLocal()
+    try:
+        existing_count = session.query(Employee).count()
+        if existing_count > 0:
+            print(f"La table employees contient déjà {existing_count} lignes. Import annulé pour éviter les doublons.")
+            print("Si tu veux réimporter, vide d'abord la table (voir README).")
+            return
 
-    existing_count = session.query(Employee).count()
-    if existing_count > 0:
-        print(f"La table employees contient déjà {existing_count} lignes. Import annulé pour éviter les doublons.")
-        print("Si tu veux réimporter, vide d'abord la table (voir README).")
+        employees = [Employee(**row.to_dict()) for _, row in df.iterrows()]
+        session.bulk_save_objects(employees)
+        session.commit()
+
+        count = session.query(Employee).count()
+        print(f"{count} salariés insérés dans la table employees.")
+    finally:
         session.close()
-        return
-
-    employees = [Employee(**row.to_dict()) for _, row in df.iterrows()]
-    session.bulk_save_objects(employees)
-    session.commit()
-
-    count = session.query(Employee).count()
-    print(f"{count} salariés insérés dans la table employees.")
-
-    session.close()
 
 
 if __name__ == "__main__":
