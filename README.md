@@ -57,7 +57,14 @@ Le fichier `.env` n'est jamais versionné (voir `.gitignore`) - il contient des 
 
 ### Entraînement du modèle
 
-Le modèle n'est pas fourni tel quel avec le dépôt, il faut le réentraîner localement :
+Le modèle entraîné (`ml/artifacts/attrition_model.joblib`) est inclus dans le dépôt — aucune action requise pour l'utiliser directement après un `git clone`.
+
+Un réentraînement n'est nécessaire que dans ces cas précis :
+- Mise à jour du dataset (nouvelles données RH disponibles)
+- Modification du pipeline de feature engineering ou des hyperparamètres
+- Mise à jour majeure de scikit-learn créant une incompatibilité de version avec le `.joblib` existant (`InconsistentVersionWarning` au chargement)
+
+Pour réentraîner :
 
 1. Placer le fichier `technova_hr_clean.csv` dans `data/`
 2. Lancer : `python train.py`
