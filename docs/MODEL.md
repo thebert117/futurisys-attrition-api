@@ -98,4 +98,6 @@ Avant de déployer un nouveau modèle réentraîné :
 
 ### Suivi en production
 
-Chaque prédiction est journalisée dans la table `prediction_logs` (voir README, section Base de données) avec horodatage — cette table constitue la base d'un futur monitoring de dérive (comparaison de la distribution des `probabilite_depart` dans le temps).
+**Limite actuelle** : le logging dans `prediction_logs` ne fonctionne qu'en local — l'API déployée publiquement sur Render ne journalise aucune prédiction, la base PostgreSQL restant volontairement inaccessible depuis l'extérieur (voir README, section "Logging tolérant aux pannes"). Le monitoring de dérive décrit ci-dessous n'est donc exploitable qu'en environnement de développement, pas sur le déploiement public actuel.
+
+En local, chaque prédiction est journalisée dans `prediction_logs` avec horodatage — cette table constitue la base d'un futur monitoring de dérive (comparaison de la distribution des `probabilite_depart` dans le temps), si la BDD venait à être rendue accessible depuis le déploiement public dans une évolution future du projet.

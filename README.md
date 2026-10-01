@@ -2,7 +2,7 @@
 
 POC de mise en production d'un modèle de machine learning (prédiction du risque de départ des salariés) via une API FastAPI, pour le compte de Futurisys.
 
-Le modèle est un `GradientBoostingClassifier` réentraîné à partir du projet Technova Partners, exposé via une API REST validée par Pydantic, avec traçabilité complète des prédictions dans une base PostgreSQL.
+Le modèle est un `GradientBoostingClassifier` réentraîné à partir du projet Technova Partners, exposé via une API REST validée par Pydantic, avec traçabilité des prédictions dans une base PostgreSQL (en environnement local).
 
 ### Built With
 
@@ -92,7 +92,7 @@ Documentation interactive (Swagger) : http://127.0.0.1:8000/docs
 
 Le endpoint `/predict` valide strictement les données d'entrée via Pydantic (types, bornes, valeurs catégorielles autorisées) et retourne une erreur `422` en cas de donnée invalide.
 
-**Limite connue** : la variable `augmentation_salaire_precedente` est traitée comme catégorielle (valeurs `"11 %"` à `"25 %"`) plutôt que numérique, héritage du modèle d'origine. Une valeur hors de cette plage est rejetée par l'API plutôt que silencieusement ignorée par le modèle - un choix délibéré, détaillé dans `CONTRIBUTING.md`.
+**Limite connue** : la variable `augmentation_salaire_precedente` est traitée comme catégorielle (valeurs `"11 %"` à `"25 %"`) plutôt que numérique, héritage du modèle d'origine. Une valeur hors de cette plage est rejetée par l'API plutôt que silencieusement ignorée par le modèle - un choix délibéré, détaillé dans `docs/MODEL.md`.
 
 ### Exemple d'appel à /predict
 

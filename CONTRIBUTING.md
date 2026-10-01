@@ -34,9 +34,15 @@ Exemple : `feat: ajout endpoint /predict`
 
 ## Standards d'expérimentation ML
 
-(à compléter à l'étape d'entraînement du modèle — décisions à documenter ici : choix du modèle, métriques suivies, gestion du déséquilibre de classes, seuil de décision retenu, etc.)
+- **Modèle** : `GradientBoostingClassifier` (scikit-learn), choisi après comparaison avec LogisticRegression, RandomForest et DecisionTree (voir `docs/MODEL.md` pour le détail)
+- **Métriques suivies** : recall, precision, F1-score, AUC ROC, le recall est priorisé (seuil de décision et optimisation orientés vers la détection maximale des départs, le coût d'un faux négatif étant jugé supérieur à celui d'un faux positif)
+- **Gestion du déséquilibre de classes** (16% de taux d'attrition) : pondération des classes (`sample_weight`, stratégie `"balanced"`), pas de sur/sous-échantillonnage
+- **Seuil de décision** : 0,5, ajustable selon la capacité des RH à traiter les alertes
+- **Hyperparamètres** : optimisés par `GridSearchCV` (validation croisée stratifiée, 5 folds)
+- **Reproductibilité** : `RANDOM_STATE = 42` fixé à toutes les étapes aléatoires (split, entraînement) — vérifiée automatiquement par `tests/test_model_performance.py::test_training_is_reproducible`
+- **Limite connue** : `augmentation_salaire_precedente` traitée comme catégorielle plutôt que numérique — détail complet dans [`docs/MODEL.md`](./docs/MODEL.md)
 
 ## Tests
 
 - Chaque nouvel endpoint de l'API doit avoir au moins un test associé dans `tests/`
-- Lancer les tests en local avant de pousser : `pytest --cov=app`
+- Lancer les tests en local avant de pousser : `pytest --cov=app --cov=ml --cov=db`
