@@ -23,12 +23,3 @@ DATABASE_URL = f"postgresql+psycopg2://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_POR
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
-
-
-def get_db_session():
-    """Fournit une session de base de données, à utiliser puis fermer proprement."""
-    session = SessionLocal()
-    try:
-        yield session
-    finally:
-        session.close()
