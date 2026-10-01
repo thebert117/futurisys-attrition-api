@@ -38,8 +38,12 @@ def predict(employee: EmployeeInput):
     # classification. On lui passe directement les données brutes validées par Pydantic.
     input_df = pd.DataFrame([employee.model_dump()])
 
-    probabilite = model.predict_proba(input_df)[0, 1]
-    risque = probabilite >= 0.5
+    probabilite_brute = model.predict_proba(input_df)[0, 1]
+
+    # Calculées une seule fois, réutilisées pour la réponse ET l'enregistrement
+    # en base, pour éviter toute divergence entre les deux.
+    risque_depart = bool(probabilite_brute >= 0.5)
+    probabilite_depart = round(float(probabilite_brute), 4)
 
     # Enregistrement systématique de l'input et de l'output en base de données.
     # Ce logging ne doit jamais empêcher l'API de répondre : si la base est
@@ -50,8 +54,8 @@ def predict(employee: EmployeeInput):
         try:
             log_entry = PredictionLog(
                 **employee.model_dump(),
-                risque_depart=bool(risque),
-                probabilite_depart=round(float(probabilite), 4),
+                risque_depart=risque_depart,
+                probabilite_depart=probabilite_depart,
             )
             session.add(log_entry)
             session.commit()
@@ -61,6 +65,6 @@ def predict(employee: EmployeeInput):
         print(f"[avertissement] Échec de l'enregistrement en base de données : {e}")
 
     return PredictionOutput(
-        risque_depart=bool(risque),
-        probabilite_depart=round(float(probabilite), 4),
+        risque_depart=risque_depart,
+        probabilite_depart=probabilite_depart,
     )
