@@ -12,6 +12,7 @@ On suit le format [Conventional Commits](https://www.conventionalcommits.org/) :
 - `ci:` → changement lié au pipeline CI/CD
 - `docs:` → changement de documentation
 - `chore:` → tâche technique sans impact fonctionnel (config, dépendances...)
+- `refactor:` → restructuration de code sans changement de comportement fonctionnel
 
 Exemple : `feat: ajout endpoint /predict`
 
