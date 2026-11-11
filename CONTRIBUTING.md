@@ -39,8 +39,8 @@ Exemple : `feat: ajout endpoint /predict`
 - **Gestion du déséquilibre de classes** (16% de taux d'attrition) : pondération des classes (`sample_weight`, stratégie `"balanced"`), pas de sur/sous-échantillonnage
 - **Seuil de décision** : 0,5, ajustable selon la capacité des RH à traiter les alertes
 - **Hyperparamètres** : optimisés par `GridSearchCV` (validation croisée stratifiée, 5 folds)
-- **Reproductibilité** : `RANDOM_STATE = 42` fixé à toutes les étapes aléatoires (split, entraînement) — vérifiée automatiquement par `tests/test_model_performance.py::test_training_is_reproducible`
-- **Limite connue** : `augmentation_salaire_precedente` traitée comme catégorielle plutôt que numérique — détail complet dans [`docs/MODEL.md`](./docs/MODEL.md)
+- **Reproductibilité** : `RANDOM_STATE = 42` fixé à toutes les étapes aléatoires (split, entraînement) - vérifiée automatiquement par `tests/test_model_performance.py::test_training_is_reproducible`
+- **Limite connue** : `augmentation_salaire_precedente` traitée comme catégorielle plutôt que numérique - détail complet dans [`docs/MODEL.md`](./docs/MODEL.md)
 
 ## Tests
 

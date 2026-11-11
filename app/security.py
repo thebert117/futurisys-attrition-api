@@ -23,7 +23,7 @@ api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 def verify_api_key(provided_key: str = Security(api_key_header)) -> None:
     """Dépendance FastAPI : vérifie que la clé API fournie est valide.
 
-    Levée d'une 401 si absente, 403 si incorrecte — distinction utile pour
+    Levée d'une 401 si absente, 403 si incorrecte - distinction utile pour
     le débogage côté consommateur de l'API.
     """
     if not API_KEY:
