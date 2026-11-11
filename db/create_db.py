@@ -1,7 +1,7 @@
 """
 Script de création de la base de données PostgreSQL et de ses tables.
 
-Usage : python db/create_db.py
+Usage : python -m db.create_db
 """
 
 import os
