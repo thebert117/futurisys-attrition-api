@@ -7,14 +7,14 @@ Le modèle est un `GradientBoostingClassifier` réentraîné à partir du projet
 ### Built With
 
 - [Python 3.11](https://www.python.org/)
-- [FastAPI](https://fastapi.tiangolo.com/) — framework API
-- [Pydantic](https://docs.pydantic.dev/) — validation des données
-- [scikit-learn](https://scikit-learn.org/) — modèle de machine learning
-- [PostgreSQL](https://www.postgresql.org/) + [SQLAlchemy](https://www.sqlalchemy.org/) — base de données
-- [Pytest](https://docs.pytest.org/) + [pytest-cov](https://coverage.readthedocs.io/) — tests
-- [Docker](https://www.docker.com/) — conteneurisation
-- [GitHub Actions](https://docs.github.com/actions) — CI/CD
-- [Render](https://render.com/) — hébergement
+- [FastAPI](https://fastapi.tiangolo.com/) - framework API
+- [Pydantic](https://docs.pydantic.dev/) - validation des données
+- [scikit-learn](https://scikit-learn.org/) - modèle de machine learning
+- [PostgreSQL](https://www.postgresql.org/) + [SQLAlchemy](https://www.sqlalchemy.org/) - base de données
+- [Pytest](https://docs.pytest.org/) + [pytest-cov](https://coverage.readthedocs.io/) - tests
+- [Docker](https://www.docker.com/) - conteneurisation
+- [GitHub Actions](https://docs.github.com/actions) - CI/CD
+- [Render](https://render.com/) - hébergement
 
 ## Sommaire
 
@@ -57,7 +57,7 @@ Le fichier `.env` n'est jamais versionné (voir `.gitignore`) - il contient des 
 
 ### Entraînement du modèle
 
-Le modèle entraîné (`ml/artifacts/attrition_model.joblib`) est inclus dans le dépôt — aucune action requise pour l'utiliser directement après un `git clone`.
+Le modèle entraîné (`ml/artifacts/attrition_model.joblib`) est inclus dans le dépôt - aucune action requise pour l'utiliser directement après un `git clone`.
 
 Un réentraînement n'est nécessaire que dans ces cas précis :
 - Mise à jour du dataset (nouvelles données RH disponibles)
@@ -131,7 +131,7 @@ Documentation technique complète du modèle (performances, limites, maintenance
 
 L'endpoint `/predict` est protégé par une clé API, transmise via l'en-tête HTTP `X-API-Key`. L'endpoint `/health` reste public (convention standard pour un endpoint de monitoring).
 
-Choix volontairement simple pour ce POC : une clé secrète unique et partagée, plutôt qu'un système de comptes utilisateurs — adapté à un usage où l'API est consommée par un service interne (SIRH, tableau de bord RH), sans besoin de droits différenciés entre utilisateurs.
+Choix volontairement simple pour ce POC : une clé secrète unique et partagée, plutôt qu'un système de comptes utilisateurs - adapté à un usage où l'API est consommée par un service interne (SIRH, tableau de bord RH), sans besoin de droits différenciés entre utilisateurs.
 
 ### Configuration
 
@@ -149,7 +149,7 @@ python -c "import secrets; print(secrets.token_urlsafe(32))"
 
 ### Exemple d'appel authentifié
 
-Voir l'exemple complet dans la section [Utilisation](#utilisation) — l'en-tête `X-API-Key` y est déjà inclus.
+Voir l'exemple complet dans la section [Utilisation](#utilisation) - l'en-tête `X-API-Key` y est déjà inclus.
 
 Sans clé (401) ou avec une clé incorrecte (403), l'API refuse la requête.
 
@@ -233,10 +233,10 @@ URL de production : https://futurisys-attrition-api.onrender.com
 
 La suite de tests est organisée par nature :
 
-- `tests/test_health.py`, `tests/test_predict_api.py` — tests fonctionnels (via l'API réelle, TestClient)
-- `tests/test_schemas.py`, `tests/test_feature_engineering.py` — tests unitaires (composants isolés)
-- `tests/test_database.py` — tests de la base de données (structure, intégrité, idempotence)
-- `tests/test_model_performance.py` — tests de performance et de reproductibilité du modèle
+- `tests/test_health.py`, `tests/test_predict_api.py` - tests fonctionnels (via l'API réelle, TestClient)
+- `tests/test_schemas.py`, `tests/test_feature_engineering.py` - tests unitaires (composants isolés)
+- `tests/test_database.py` - tests de la base de données (structure, intégrité, idempotence)
+- `tests/test_model_performance.py` - tests de performance et de reproductibilité du modèle
 
 Lancer la suite complète avec couverture :
 
@@ -256,6 +256,6 @@ Distribué sous licence MIT. Voir [`LICENSE`](./LICENSE) pour plus de détails.
 
 ## Contact
 
-Thomas Hébert — [github.com/thebert117](https://github.com/thebert117)
+Thomas Hébert - [github.com/thebert117](https://github.com/thebert117)
 
 Lien du projet : [github.com/thebert117/futurisys-attrition-api](https://github.com/thebert117/futurisys-attrition-api)

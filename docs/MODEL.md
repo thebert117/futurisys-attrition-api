@@ -5,24 +5,24 @@
 | | |
 |---|---|
 | **Algorithme** | `GradientBoostingClassifier` (scikit-learn) |
-| **Tâche** | Classification binaire — prédiction du risque de départ d'un salarié |
+| **Tâche** | Classification binaire - prédiction du risque de départ d'un salarié |
 | **Origine** | Réentraîné à partir du pipeline validé dans le projet Technova Partners |
 | **Format de sérialisation** | `joblib` (`ml/artifacts/attrition_model.joblib`) |
-| **Dataset d'entraînement** | `technova_hr_clean.csv` — 1470 salariés, 16% de taux d'attrition |
+| **Dataset d'entraînement** | `technova_hr_clean.csv` - 1470 salariés, 16% de taux d'attrition |
 
 ## Architecture du pipeline
 
 Le modèle sérialisé est un pipeline scikit-learn **entièrement autonome**, en 3 étapes :
 
-1. **Feature engineering** (`FunctionTransformer`) — calcule 6 variables dérivées à partir des données brutes :
+1. **Feature engineering** (`FunctionTransformer`) - calcule 6 variables dérivées à partir des données brutes :
    - `satisfaction_moyenne` (moyenne de 4 scores de satisfaction)
    - `experience_avant_entreprise` (expérience totale − ancienneté dans l'entreprise)
    - `nouvel_arrivant`, `nouveau_poste` (indicateurs binaires)
    - `anciennete_poste_relative`, `anciennete_manager_relative` (ratios d'ancienneté)
-2. **Preprocessing** (`ColumnTransformer`) — imputation médiane + standardisation (numériques), imputation par mode + one-hot encoding (catégorielles)
+2. **Preprocessing** (`ColumnTransformer`) - imputation médiane + standardisation (numériques), imputation par mode + one-hot encoding (catégorielles)
 3. **Classification** (`GradientBoostingClassifier`)
 
-Cette encapsulation signifie que le modèle accepte directement des données **brutes** (mêmes colonnes que le dataset d'origine) en entrée — aucun prétraitement externe n'est nécessaire côté API.
+Cette encapsulation signifie que le modèle accepte directement des données **brutes** (mêmes colonnes que le dataset d'origine) en entrée - aucun prétraitement externe n'est nécessaire côté API.
 
 ### Hyperparamètres
 
@@ -55,7 +55,7 @@ Le dataset est déséquilibré (16% de départs). Le modèle utilise une pondér
 
 ### Pourquoi le recall est priorisé
 
-Un modèle prédisant systématiquement "aucun départ" atteindrait 84% d'accuracy tout en étant inutile (0% de recall). Le coût métier d'un départ non anticipé (faux négatif) est jugé plus élevé que celui d'une fausse alerte RH (faux positif) — le seuil de décision (0,5) et l'optimisation ont été choisis en conséquence.
+Un modèle prédisant systématiquement "aucun départ" atteindrait 84% d'accuracy tout en étant inutile (0% de recall). Le coût métier d'un départ non anticipé (faux négatif) est jugé plus élevé que celui d'une fausse alerte RH (faux positif) - le seuil de décision (0,5) et l'optimisation ont été choisis en conséquence.
 
 ### Facteurs les plus influents (interprétabilité SHAP)
 
@@ -66,10 +66,10 @@ D'après l'analyse du notebook d'origine :
 
 ## Limites connues
 
-- **`augmentation_salaire_precedente` traitée comme catégorielle** (valeurs `"11 %"` à `"25 %"`) plutôt que numérique — héritage du pipeline d'origine. Une valeur hors de cette plage est rejetée par l'API (erreur 422) plutôt que silencieusement ignorée par le modèle. Amélioration future possible : conversion en variable numérique continue.
-- **Causalité non établie** — le modèle identifie des facteurs associés statistiquement aux départs, pas des causes prouvées. Les résultats doivent être interprétés comme des signaux, pas des certitudes (cf. contexte métier du projet Technova Partners).
-- **Faux positifs/négatifs** — sur le jeu de test (294 salariés), le modèle produit 43 fausses alertes et manque 15 départs réels. Le seuil de décision (0,5) peut être ajusté selon la capacité des RH à traiter les alertes.
-- **Dataset relativement restreint** (1470 lignes) — les performances sur une population significativement différente (autre secteur, autre pays) ne sont pas garanties.
+- **`augmentation_salaire_precedente` traitée comme catégorielle** (valeurs `"11 %"` à `"25 %"`) plutôt que numérique - héritage du pipeline d'origine. Une valeur hors de cette plage est rejetée par l'API (erreur 422) plutôt que silencieusement ignorée par le modèle. Amélioration future possible : conversion en variable numérique continue.
+- **Causalité non établie** - le modèle identifie des facteurs associés statistiquement aux départs, pas des causes prouvées. Les résultats doivent être interprétés comme des signaux, pas des certitudes (cf. contexte métier du projet Technova Partners).
+- **Faux positifs/négatifs** - sur le jeu de test (294 salariés), le modèle produit 43 fausses alertes et manque 15 départs réels. Le seuil de décision (0,5) peut être ajusté selon la capacité des RH à traiter les alertes.
+- **Dataset relativement restreint** (1470 lignes) - les performances sur une population significativement différente (autre secteur, autre pays) ne sont pas garanties.
 
 ## Reproductibilité
 
@@ -89,7 +89,7 @@ D'après l'analyse du notebook d'origine :
 python train.py
 ```
 
-**Important** : toujours utiliser ce point d'entrée (jamais `python ml/train_model.py` ni `python -m ml.train_model` directement) — voir README pour l'explication technique (piège de sérialisation `FunctionTransformer`/pickling).
+**Important** : toujours utiliser ce point d'entrée (jamais `python ml/train_model.py` ni `python -m ml.train_model` directement) - voir README pour l'explication technique (piège de sérialisation `FunctionTransformer`/pickling).
 
 Avant de déployer un nouveau modèle réentraîné :
 1. Vérifier que `tests/test_model_performance.py` passe (seuils minimaux de recall/precision/F1/AUC)
@@ -98,6 +98,6 @@ Avant de déployer un nouveau modèle réentraîné :
 
 ### Suivi en production
 
-**Limite actuelle** : le logging dans `prediction_logs` ne fonctionne qu'en local — l'API déployée publiquement sur Render ne journalise aucune prédiction, la base PostgreSQL restant volontairement inaccessible depuis l'extérieur (voir README, section "Logging tolérant aux pannes"). Le monitoring de dérive décrit ci-dessous n'est donc exploitable qu'en environnement de développement, pas sur le déploiement public actuel.
+**Limite actuelle** : le logging dans `prediction_logs` ne fonctionne qu'en local - l'API déployée publiquement sur Render ne journalise aucune prédiction, la base PostgreSQL restant volontairement inaccessible depuis l'extérieur (voir README, section "Logging tolérant aux pannes"). Le monitoring de dérive décrit ci-dessous n'est donc exploitable qu'en environnement de développement, pas sur le déploiement public actuel.
 
-En local, chaque prédiction est journalisée dans `prediction_logs` avec horodatage — cette table constitue la base d'un futur monitoring de dérive (comparaison de la distribution des `probabilite_depart` dans le temps), si la BDD venait à être rendue accessible depuis le déploiement public dans une évolution future du projet.
+En local, chaque prédiction est journalisée dans `prediction_logs` avec horodatage - cette table constitue la base d'un futur monitoring de dérive (comparaison de la distribution des `probabilite_depart` dans le temps), si la BDD venait à être rendue accessible depuis le déploiement public dans une évolution future du projet.

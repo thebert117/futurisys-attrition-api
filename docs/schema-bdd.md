@@ -1,6 +1,6 @@
 # Schéma de la base de données
 
-Ce diagramme est écrit en [Mermaid](https://mermaid.js.org/) — GitHub le restitue automatiquement sous forme de diagramme visuel lors de l'affichage de ce fichier sur le dépôt.
+Ce diagramme est écrit en [Mermaid](https://mermaid.js.org/) - GitHub le restitue automatiquement sous forme de diagramme visuel lors de l'affichage de ce fichier sur le dépôt.
 
 ```mermaid
 erDiagram
